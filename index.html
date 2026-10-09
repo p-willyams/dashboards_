@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Painel de Indicadores</title>
+  <style>
+    :root {
+      --ink: #1a2b3c;
+      --ink-soft: #4a5d72;
+      --line: #d5dde6;
+      --bg: #e8edf2;
+      --panel: #ffffff;
+      --accent: #2c5f8a;
+      --accent-hover: #1f4a6e;
+      --accent-soft: #e4eef6;
+      --nav-w: 272px;
+      --header-h: 58px;
+      --font: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font);
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 500px at 0% 0%, #d7e6f2 0%, transparent 55%),
+        radial-gradient(900px 420px at 100% 0%, #d9ebe3 0%, transparent 50%),
+        var(--bg);
+    }
+
+    body {
+      display: grid;
+      grid-template-columns: var(--nav-w) 1fr;
+      grid-template-rows: var(--header-h) 1fr;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0 1.25rem;
+      background: linear-gradient(115deg, #152536 0%, #2c5f8a 58%, #2f6f62 100%);
+      color: #f4f7fa;
+      z-index: 30;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      min-width: 0;
+    }
+
+    .brand h1 {
+      font-size: 1.05rem;
+      font-weight: 650;
+      letter-spacing: .02em;
+      white-space: nowrap;
+    }
+
+    .brand .sub {
+      font-size: .78rem;
+      opacity: .78;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .menu-toggle {
+      display: none;
+      border: 1px solid rgba(255,255,255,.35);
+      background: transparent;
+      color: inherit;
+      border-radius: 8px;
+      padding: .35rem .65rem;
+      cursor: pointer;
+      font-size: .85rem;
+    }
+
+    .chip {
+      font-size: .72rem;
+      padding: .28rem .6rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.18);
+    }
+
+    .sidebar {
+      grid-row: 2;
+      background: rgba(255,255,255,.92);
+      backdrop-filter: blur(10px);
+      border-right: 1px solid var(--line);
+      padding: 1.15rem .9rem;
+      display: flex;
+      flex-direction: column;
+      gap: .4rem;
+      overflow-y: auto;
+    }
+
+    .nav-label {
+      font-size: .68rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--ink-soft);
+      padding: .25rem .65rem .55rem;
+      font-weight: 700;
+    }
+
+    .nav-btn {
+      appearance: none;
+      width: 100%;
+      border: 1px solid transparent;
+      background: transparent;
+      text-align: left;
+      padding: .8rem .85rem;
+      border-radius: 12px;
+      cursor: pointer;
+      color: var(--ink);
+      transition: background .18s ease, border-color .18s ease, transform .15s ease;
+      display: grid;
+      gap: .22rem;
+    }
+
+    .nav-btn:hover {
+      background: var(--accent-soft);
+      border-color: #c9dceb;
+    }
+
+    .nav-btn.active {
+      background: var(--accent-soft);
+      border-color: #9fc0db;
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+
+    .nav-btn .num {
+      font-size: .68rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: .05em;
+    }
+
+    .nav-btn .label {
+      font-size: .93rem;
+      font-weight: 650;
+      line-height: 1.25;
+    }
+
+    .nav-btn .desc {
+      font-size: .74rem;
+      color: var(--ink-soft);
+      line-height: 1.35;
+    }
+
+    .sidebar-foot {
+      margin-top: auto;
+      padding: .9rem .65rem 0;
+      border-top: 1px solid var(--line);
+      font-size: .72rem;
+      color: var(--ink-soft);
+      line-height: 1.45;
+    }
+
+    .main {
+      grid-row: 2;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .tabs-mobile {
+      display: none;
+      gap: .4rem;
+      padding: .75rem 1rem 0;
+      overflow-x: auto;
+    }
+
+    .tab {
+      flex: 0 0 auto;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 999px;
+      padding: .4rem .75rem;
+      font-size: .78rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--ink-soft);
+    }
+
+    .tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+      padding: .85rem 1.15rem;
+      background: rgba(255,255,255,.78);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .toolbar h2 {
+      font-size: 1.05rem;
+      font-weight: 650;
+    }
+
+    .toolbar p {
+      font-size: .8rem;
+      color: var(--ink-soft);
+      margin-top: .15rem;
+    }
+
+    .tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .45rem;
+    }
+
+    .btn {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      border-radius: 8px;
+      padding: .45rem .75rem;
+      font-size: .78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s ease, border-color .15s ease, color .15s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .btn:hover {
+      border-color: #a9bfd3;
+      background: var(--accent-soft);
+      color: var(--accent-hover);
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .btn.primary:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+      color: #fff;
+    }
+
+    .stage {
+      flex: 1;
+      min-height: 0;
+      padding: .9rem 1rem 1rem;
+      display: flex;
+    }
+
+    .frame-shell {
+      flex: 1;
+      position: relative;
+      background: #f7f8fa;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(26, 43, 60, .06);
+    }
+
+    .frame-shell iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #f7f8fa;
+      display: none;
+    }
+
+    .frame-shell iframe.active {
+      display: block;
+    }
+
+    .loading {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: #f7f8fa;
+      z-index: 2;
+      color: var(--ink-soft);
+      font-size: .9rem;
+    }
+
+    .loading.hidden { display: none; }
+
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid #c9d5e2;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin: 0 auto .5rem;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 900px) {
+      body {
+        grid-template-columns: 1fr;
+        grid-template-rows: var(--header-h) auto 1fr;
+      }
+
+      .menu-toggle { display: inline-flex; }
+      .brand .sub { display: none; }
+
+      .sidebar {
+        display: none;
+        grid-row: 2;
+        grid-column: 1;
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+        max-height: 46vh;
+      }
+
+      .sidebar.open { display: flex; }
+      .main { grid-row: 3; }
+      .tabs-mobile { display: flex; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menu">Menu</button>
+      <h1>Painel de Indicadores</h1>
+      <span class="sub">Visão executiva · Performance da IA · Operação</span>
+    </div>
+    <span class="chip">3 dashboards · interativo</span>
+  </header>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="nav-label">Navegação</div>
+
+    <button class="nav-btn active" type="button" data-id="dash1">
+      <span class="num">01</span>
+      <span class="label">Executive Overview</span>
+      <span class="desc">KPIs globais, demanda e qualidade</span>
+    </button>
+
+    <button class="nav-btn" type="button" data-id="dash2">
+      <span class="num">02</span>
+      <span class="label">Performance da IA</span>
+      <span class="desc">Precision, recall e evolução mensal</span>
+    </button>
+
+    <button class="nav-btn" type="button" data-id="dash3">
+      <span class="num">03</span>
+      <span class="label">Operação / Produtividade</span>
+      <span class="desc">Backlog, inspetores e carga diária</span>
+    </button>
+
+    <div class="sidebar-foot">
+      Use zoom, hover e legendas em cada gráfico. Alternar painéis não perde o estado já carregado.
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="tabs-mobile" id="mobileTabs"></div>
+
+    <div class="toolbar">
+      <div>
+        <h2 id="viewTitle">Executive Overview</h2>
+        <p id="viewDesc">KPIs globais, demanda e qualidade</p>
+      </div>
+      <div class="tools">
+        <button class="btn" id="btnPrev" type="button">Anterior</button>
+        <button class="btn" id="btnNext" type="button">Próximo</button>
+        <a class="btn primary" id="btnOpen" href="dashboard_1_executive.html" target="_blank" rel="noopener">Abrir isolado</a>
+      </div>
+    </div>
+
+    <section class="stage">
+      <div class="frame-shell" id="frameShell">
+        <div class="loading" id="loading">
+          <div>
+            <div class="spinner"></div>
+            Carregando dashboard…
+          </div>
+        </div>
+        <iframe
+          id="frame-dash1"
+          title="Executive Overview"
+          data-src="dashboard_1_executive.html"
+          loading="lazy"
+        ></iframe>
+        <iframe
+          id="frame-dash2"
+          title="Performance da IA"
+          data-src="dashboard_2_performance_ia.html"
+          loading="lazy"
+        ></iframe>
+        <iframe
+          id="frame-dash3"
+          title="Operação / Produtividade"
+          data-src="dashboard_3_operacao.html"
+          loading="lazy"
+        ></iframe>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const ORDER = ["dash1", "dash2", "dash3"];
+
+    const META = {
+      dash1: {
+        title: "Executive Overview",
+        desc: "KPIs globais, demanda e qualidade",
+        short: "Executivo",
+        file: "dashboard_1_executive.html"
+      },
+      dash2: {
+        title: "Performance da IA",
+        desc: "Precision, recall e evolução mensal",
+        short: "IA",
+        file: "dashboard_2_performance_ia.html"
+      },
+      dash3: {
+        title: "Operação / Produtividade",
+        desc: "Backlog, inspetores e carga diária",
+        short: "Operação",
+        file: "dashboard_3_operacao.html"
+      }
+    };
+
+    const sidebar = document.getElementById("sidebar");
+    const loading = document.getElementById("loading");
+    const viewTitle = document.getElementById("viewTitle");
+    const viewDesc = document.getElementById("viewDesc");
+    const btnOpen = document.getElementById("btnOpen");
+    const mobileTabs = document.getElementById("mobileTabs");
+
+    let currentId = null;
+    const loaded = new Set();
+
+    function syncChrome(id) {
+      document.querySelectorAll(".nav-btn").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.id === id);
+      });
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.classList.toggle("active", tab.dataset.id === id);
+      });
+
+      const meta = META[id];
+      viewTitle.textContent = meta.title;
+      viewDesc.textContent = meta.desc;
+      btnOpen.href = meta.file;
+      document.title = meta.title + " · Painel de Indicadores";
+    }
+
+    function showFrame(id) {
+      document.querySelectorAll(".frame-shell iframe").forEach((frame) => {
+        frame.classList.toggle("active", frame.id === "frame-" + id);
+      });
+    }
+
+    function loadFrame(id) {
+      const frame = document.getElementById("frame-" + id);
+      if (!frame) return Promise.reject(new Error("Frame não encontrado"));
+
+      if (loaded.has(id)) {
+        showFrame(id);
+        loading.classList.add("hidden");
+        return Promise.resolve();
+      }
+
+      loading.classList.remove("hidden");
+      showFrame(id);
+
+      return new Promise((resolve) => {
+        const onLoad = () => {
+          loaded.add(id);
+          loading.classList.add("hidden");
+          frame.removeEventListener("load", onLoad);
+          resolve();
+        };
+        frame.addEventListener("load", onLoad);
+        frame.src = frame.dataset.src;
+      });
+    }
+
+    async function goTo(id) {
+      if (!META[id] || id === currentId) return;
+      syncChrome(id);
+      history.replaceState(null, "", "#" + id);
+      currentId = id;
+      await loadFrame(id);
+    }
+
+    function step(delta) {
+      const idx = ORDER.indexOf(currentId);
+      const next = ORDER[(idx + delta + ORDER.length) % ORDER.length];
+      goTo(next);
+    }
+
+    function buildMobileTabs() {
+      mobileTabs.innerHTML = "";
+      ORDER.forEach((id) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "tab";
+        btn.dataset.id = id;
+        btn.textContent = META[id].short;
+        btn.addEventListener("click", () => goTo(id));
+        mobileTabs.appendChild(btn);
+      });
+    }
+
+    document.querySelectorAll(".nav-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        goTo(btn.dataset.id);
+        sidebar.classList.remove("open");
+      });
+    });
+
+    document.getElementById("menuToggle").addEventListener("click", () => {
+      sidebar.classList.toggle("open");
+    });
+
+    document.getElementById("btnPrev").addEventListener("click", () => step(-1));
+    document.getElementById("btnNext").addEventListener("click", () => step(1));
+
+    document.addEventListener("keydown", (e) => {
+      if (e.target && /input|textarea|select/i.test(e.target.tagName)) return;
+      if (e.key === "ArrowLeft") step(-1);
+      if (e.key === "ArrowRight") step(1);
+    });
+
+    buildMobileTabs();
+
+    const fromHash = (location.hash || "").replace("#", "");
+    goTo(META[fromHash] ? fromHash : "dash1");
+  </script>
+</body>
+</html>
